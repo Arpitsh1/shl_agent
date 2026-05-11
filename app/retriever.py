@@ -10,6 +10,19 @@ with open(DATA_FILE, "r", encoding="utf-8") as f:
     assessments = json.load(f)
 
 
+print("\n========== DATA DEBUG ==========")
+
+print("TOTAL ASSESSMENTS:", len(assessments))
+
+if len(assessments) > 0:
+
+    print("\nFIRST ASSESSMENT SAMPLE:\n")
+
+    print(assessments[0])
+
+print("================================\n")
+
+
 STOPWORDS = {
     "a",
     "an",
@@ -37,6 +50,7 @@ STOPWORDS = {
 
 
 SYNONYMS = {
+
     "java": [
         "java",
         "core java",
@@ -156,6 +170,7 @@ COMPARISON_WORDS = {
 def clean_text(text):
 
     if not isinstance(text, str):
+
         text = str(text)
 
     text = text.lower()
@@ -251,21 +266,38 @@ def score_assessment(
 
     score = 0
 
+    print("\nASSESSMENT BEING SCORED:")
+
+    print(assessment)
+
     searchable_text = " ".join([
 
-        assessment.get("name", ""),
-
-        assessment.get(
-            "description",
-            ""
+        str(
+            assessment.get(
+                "name",
+                ""
+            )
         ),
 
-        assessment.get(
-            "test_type",
-            ""
+        str(
+            assessment.get(
+                "description",
+                ""
+            )
+        ),
+
+        str(
+            assessment.get(
+                "test_type",
+                ""
+            )
         )
 
     ]).lower()
+
+    print("SEARCHABLE TEXT:")
+
+    print(searchable_text)
 
     for keyword in keywords:
 
@@ -359,7 +391,7 @@ def retrieve_assessments(
         })
 
     print(
-        "FINAL RESULTS:",
+        "\nFINAL RESULTS:",
         len(results)
     )
 
