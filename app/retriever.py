@@ -316,50 +316,70 @@ def score_assessment(
     return score
 
 
-def retrieve_assessments(
-    query,
-    top_k=10
-):
-
-    print("\n========== RETRIEVER DEBUG ==========")
-
-    print("QUERY:", query)
-
-    print(
-        "TOTAL ASSESSMENTS:",
-        len(assessments)
-    )
+def retrieve_assessments(query, top_k=10):
 
     keywords = extract_keywords(query)
 
+    print("=" * 50)
+    print("QUERY:", query)
     print("KEYWORDS:", keywords)
 
     scored = []
 
     for assessment in assessments:
 
-        score = score_assessment(
-            assessment,
-            keywords
-        )
+        searchable_text = " ".join([
+            assessment.get("name", ""),
+            assessment.get("description", ""),
+            assessment.get("test_type", ""),
+            " ".join(assessment.get("keywords", []))
+        ]).lower()
 
-        if score > 0:
+        score = 0
 
-            print(
-                "MATCH:",
-                assessment.get("name"),
-                "| SCORE:",
-                score
-            )
+        # strong exact keyword matching
+        for keyword in keywords:
 
-            scored.append(
-                (score, assessment)
-            )
+            keyword = keyword.lower()
+
+            if keyword in searchable_text:
+                score += 10
+
+        # prioritize exact java matches
+        if "java" in keywords:
+
+            if "java" in searchable_text:
+                score += 30
+            else:
+                score -= 20
+
+        # penalize irrelevant tech
+        irrelevant_terms = [
+            ".net",
+            "accounting",
+            "sales",
+            "bank",
+            "communication"
+        ]
+
+        for term in irrelevant_terms:
+
+            if term in searchable_text and "java" in keywords:
+                score -= 15
+
+        # skip low relevance
+        if score <= 0:
+            continue
+
+        scored.append((score, assessment))
 
     scored.sort(
         key=lambda x: x[0],
         reverse=True
     )
+
+    print("FINAL RESULTS:", len(scored))
+    print("=" * 50)
 
     results = []
 
@@ -367,38 +387,20 @@ def retrieve_assessments(
 
         results.append({
 
-            "name": assessment.get(
-                "name",
-                ""
-            ),
-
-            "url": assessment.get(
-                "url",
-                ""
-            ),
-
+            "name": assessment.get("name", ""),
+            "url": assessment.get("url", ""),
             "test_type": assessment.get(
                 "test_type",
                 "Unknown"
             ),
-
             "description": assessment.get(
                 "description",
                 ""
             ),
-
             "score": score
         })
 
-    print(
-        "\nFINAL RESULTS:",
-        len(results)
-    )
-
-    print("====================================\n")
-
     return results
-
 
 def detect_comparison_request(message):
 
