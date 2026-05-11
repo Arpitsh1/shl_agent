@@ -37,15 +37,63 @@ STOPWORDS = {
 
 
 SYNONYMS = {
-    "java": ["java", "core java", "java ee"],
-    "python": ["python"],
-    "frontend": ["frontend", "angular", "react", "javascript", "html", "css"],
-    "backend": ["backend", ".net", "api"],
-    "cloud": ["aws", "cloud", "docker", "kubernetes"],
-    "data": ["data science", "statistics", "analytics"],
-    "personality": ["opq", "personality", "behavioral"],
-    "cognitive": ["ability", "cognitive", "reasoning"],
-    "customer": ["customer service", "support", "call center"]
+    "java": [
+        "java",
+        "core java",
+        "java ee",
+        "java frameworks",
+        "java web services"
+    ],
+
+    "python": [
+        "python"
+    ],
+
+    "frontend": [
+        "frontend",
+        "angular",
+        "react",
+        "javascript",
+        "html",
+        "css"
+    ],
+
+    "backend": [
+        "backend",
+        ".net",
+        "api"
+    ],
+
+    "cloud": [
+        "aws",
+        "cloud",
+        "docker",
+        "kubernetes"
+    ],
+
+    "data": [
+        "data science",
+        "statistics",
+        "analytics"
+    ],
+
+    "personality": [
+        "opq",
+        "personality",
+        "behavioral"
+    ],
+
+    "cognitive": [
+        "ability",
+        "cognitive",
+        "reasoning"
+    ],
+
+    "customer": [
+        "customer service",
+        "support",
+        "call center"
+    ]
 }
 
 
@@ -107,12 +155,18 @@ COMPARISON_WORDS = {
 
 def clean_text(text):
 
+    if not isinstance(text, str):
+        text = str(text)
+
     text = text.lower()
 
-    text = re.sub(r"[^a-zA-Z0-9\s\.\+#]", " ", text)
+    text = re.sub(
+        r"[^a-zA-Z0-9\s\.\+#]",
+        " ",
+        text
+    )
 
     return text
-
 
 
 def tokenize(text):
@@ -126,10 +180,10 @@ def tokenize(text):
     for word in words:
 
         if word not in STOPWORDS:
+
             filtered.append(word)
 
     return filtered
-
 
 
 def is_vague_query(message):
@@ -139,7 +193,10 @@ def is_vague_query(message):
     if len(tokens) <= 2:
         return True
 
-    found_tech = any(token in TECH_KEYWORDS for token in tokens)
+    found_tech = any(
+        token in TECH_KEYWORDS
+        for token in tokens
+    )
 
     found_personality = any(
         token in PERSONALITY_KEYWORDS
@@ -168,7 +225,6 @@ def is_vague_query(message):
     return False
 
 
-
 def extract_keywords(message):
 
     tokens = tokenize(message)
@@ -185,23 +241,36 @@ def extract_keywords(message):
                 SYNONYMS[token]
             )
 
-    return expanded_keywords
+    return list(set(expanded_keywords))
 
 
-
-def score_assessment(assessment, keywords):
+def score_assessment(
+    assessment,
+    keywords
+):
 
     score = 0
 
     searchable_text = " ".join([
+
         assessment.get("name", ""),
-        assessment.get("description", ""),
-        assessment.get("test_type", "")
+
+        assessment.get(
+            "description",
+            ""
+        ),
+
+        assessment.get(
+            "test_type",
+            ""
+        )
+
     ]).lower()
 
     for keyword in keywords:
 
         if keyword.lower() in searchable_text:
+
             score += 3
 
     keyword_counts = Counter(keywords)
@@ -209,10 +278,10 @@ def score_assessment(assessment, keywords):
     for keyword, count in keyword_counts.items():
 
         if keyword.lower() in searchable_text:
+
             score += count
 
     return score
-
 
 
 def retrieve_assessments(
@@ -220,7 +289,18 @@ def retrieve_assessments(
     top_k=10
 ):
 
+    print("\n========== RETRIEVER DEBUG ==========")
+
+    print("QUERY:", query)
+
+    print(
+        "TOTAL ASSESSMENTS:",
+        len(assessments)
+    )
+
     keywords = extract_keywords(query)
+
+    print("KEYWORDS:", keywords)
 
     scored = []
 
@@ -232,6 +312,13 @@ def retrieve_assessments(
         )
 
         if score > 0:
+
+            print(
+                "MATCH:",
+                assessment.get("name"),
+                "| SCORE:",
+                score
+            )
 
             scored.append(
                 (score, assessment)
@@ -247,21 +334,38 @@ def retrieve_assessments(
     for score, assessment in scored[:top_k]:
 
         results.append({
-            "name": assessment.get("name", ""),
-            "url": assessment.get("url", ""),
+
+            "name": assessment.get(
+                "name",
+                ""
+            ),
+
+            "url": assessment.get(
+                "url",
+                ""
+            ),
+
             "test_type": assessment.get(
                 "test_type",
                 "Unknown"
             ),
+
             "description": assessment.get(
                 "description",
                 ""
             ),
+
             "score": score
         })
 
-    return results
+    print(
+        "FINAL RESULTS:",
+        len(results)
+    )
 
+    print("====================================\n")
+
+    return results
 
 
 def detect_comparison_request(message):
@@ -272,7 +376,6 @@ def detect_comparison_request(message):
         word in lower
         for word in COMPARISON_WORDS
     )
-
 
 
 def build_catalog_context(results):
