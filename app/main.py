@@ -141,9 +141,13 @@ def chat(req: ChatRequest):
             }
 
         # recommendation
+        query = state[
+             "latest_user_message"
+             ]
+        
         recommendations = (
             retrieve_assessments(
-                state["latest_user_message"],
+                query,
                 top_k=10
                 )
             )
