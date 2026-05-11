@@ -143,10 +143,10 @@ def chat(req: ChatRequest):
         # recommendation
         recommendations = (
             retrieve_assessments(
-                state,
+                state["latest_user_message"],
                 top_k=10
+                )
             )
-        )
 
         formatted = []
 
